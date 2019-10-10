@@ -1,0 +1,41 @@
+{
+  "name": "hydra-router",
+  "version": "1.6.20",
+  "description": "A service which routes requests to hydra-based microservices",
+  "author": {
+    "name": "Carlos Justiniano",
+    "email": "carlos.justiniano@gmail.com"
+  },
+  "private": true,
+  "scripts": {
+    "start": "node hydra-router.js",
+    "gctrace": "node --nouse-idle-notification --expose-gc --trace-gc --log-gc hydra-router.js",
+    "debug": "node --inspect --debug-brk hydra-router.js",
+    "profile": "node --prof hydra-router.js",
+    "profile-process": "f=$(ls -t isolate*.log | head -n1); node --prof-process \"$f\" > prof-process.log",
+    "test": "mocha specs --reporter spec"
+  },
+  "engines": {
+    "node": ">=8.11.0"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "bluebird": "3.5.1",
+    "fwsp-logger": "0.3.3",
+    "hydra-plugin-hls": "0.2.6",
+    "hydra-plugin-loggly": "0.1.10",
+    "hydra-promoted-core": "^1.0.1",
+    "newrelic": "4.8.0",
+    "nodemon": "^1.19.3",
+    "route-parser": "0.0.5",
+    "ws": "5.0.0"
+  },
+  "devDependencies": {
+    "chai": "4.0.2",
+    "eslint": "4.0.0",
+    "eslint-config-google": "0.8.0",
+    "eslint-plugin-mocha": "4.11.0",
+    "mocha": "3.4.2",
+    "superagent": "3.5.2"
+  }
+}

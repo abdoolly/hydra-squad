@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hydra Router Dashboard</title>
+
+    <link rel="stylesheet" href="index.css">
+    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"> -->
+
+    <script src="index.js"></script>
+    <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://unpkg.com/preact"></script> -->
+
+    <style>
+      body {
+        background-color: lightgray;
+      }
+      .page-body {
+        margin-top: 8rem;
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+      }
+      .container {
+        width: 100%;
+      }
+      .panel-max-width {
+        width: 40rem;
+        margin: 1rem;
+      }
+      .panel-full-width {
+        width: 100%;
+        margin: 1rem;
+      }
+      .panel {
+        box-shadow: 5px 5px 5px rgba(0,0,0,.1);
+      }
+      .panel-body {
+        margin: 1rem;
+        height: 100%;
+        width: 100%;
+        overflow-x: none;
+        overflow-y: auto;
+      }
+      .buttonbar {
+        margin: 0.75rem 1rem 0 0;
+      }
+      .red {
+        color: red;
+      }
+      .black {
+        color: black;
+      }
+      .line {
+        background-color: #FFFFFF;
+      }
+      .linealt {
+        background-color: #F0F8FF;
+      }
+      .instance-info {
+        position: relative;
+        top: 5.5rem;
+        font-size: 1rem;
+        text-align: center;
+        color: black;
+      }
+      .filter {
+        position: relative;
+        top: 7rem;
+        font-size: 1rem;
+        text-align: center;
+        color: black;
+      }
+      .filter-checkbox {
+        padding: .5rem;
+        border-radius: .5rem;
+        font-size: 2rem;
+      }
+      .search-input {
+        height: 3rem;
+        font-size: 1.8rem;
+        padding: .5rem;
+        border-radius: .5rem;
+        margin: 1rem;
+      }
+      .search-spacer {
+        width: 6rem;
+      }
+      .table-sep {
+        margin-bottom: 4rem;
+      }
+      .td-center {
+        text-align: center;
+      }
+    </style>
+	</head>
+	<body>
+    <script>
+const {Component, h, render} = window.preact;
+
+const ONE_SECOND = 1;
+const ONE_MINUTE = ONE_SECOND * 60;
+const ONE_QUARTER_HOUR = ONE_MINUTE * 15;
+const ONE_HOUR = ONE_QUARTER_HOUR * 4;
+
+/**
+* @name App
+* @summary Toplevel Application Component
+* @return {undefined}
+*/
+class App extends Component {
+  constructor(props) {
+    super(props);
+    this.onScreenChange = this.onScreenChange.bind(this);
+  }
+
+  componentDidMount() {
+    this.setState({
+      title: 'Hydra Router Dashboard',
+      screen: 'dashboard'
+    });
+  }
+
+  onScreenChange(screen) {
+    this.setState({
+      screen
+    });
+  }
+
+  render(props, state) {
+    return (
+      h('div', {id: 'app'},
+        h(Header, {title: state.title, onScreenChange: this.onScreenChange}),
+        h(Main, {screen: state.screen, onScreenChange: this.onScreenChange})
+      )
+    );
+  }
+}
+
+/**
+* @name ButtonBar
+* @summary Button Bar Component
+* @return {undefined}
+*/
+class ButtonBar extends Component {
+  constructor(props) {
+    super(props);
+  }
+
+  onPress(screen) {
+    this.props.onScreenChange(screen);
+  }
+
+  render(props, state) {
+    return (
+      h('div', {class: 'btn-group pull-right buttonbar', role: 'group', 'aria-label': 'Left Align'},
+        h('button', {'type': 'button', class: 'btn btn-default', onclick: this.onPress.bind(this, 'dashboard')},
+          h('span', {class: 'glyphicon glyphicon-th', 'aria-hidden': true})
+        ),
+        h('button', {'type': 'button', class: 'btn btn-default', onclick: this.onPress.bind(this, 'log')},
+          h('span', {class: 'glyphicon glyphicon-list-alt', 'aria-hidden': true})
+        ),
+        h('button', {'type': 'button', class: 'btn btn-default', onclick: this.onPress.bind(this, 'stats')},
+          h('span', {class: 'glyphicon glyphicon-stats', 'aria-hidden': true})
+        )
+      )
+    );
+  }
+}
+
+/**
+* @name Panel
+* @summary Panel Component
+* @return {undefined}
+*/
+class Panel extends Component {
+  render(props, state) {
+    let type;
+    if (!props.type || props.type === 'normal') {
+      type = 'panel-max-width';
+    }
+    if (props.type === 'full') {
+      type = 'panel-full-width';
+    }
+    return (
+      h('div', {class: `panel panel-default ${type}`},
+        h('div', {class: 'panel-heading'},
+          h('h3', {class: 'panel-title'},
+            props.icon && (
+              h('div', {class: `${props.titleColor}`},
+                h('span', {class: `glyphicon ${props.icon}`, 'aria-hidden': true}),
+                h('span', {}, ` ${props.title}`)
+              )
+            ),
+            !props.icon && (props.title)
+          )
+        ),
+        h('div', {class: 'panel-body'}, props.body)
+      )
+    );
+  }
+}
+
+/**
+* @name Header
+* @summary Application Header Component
+* @return {undefined}
+*/
+class Header extends Component {
+  render(props, state) {
+    return (
+      h('nav', {class: 'navbar navbar-inverse navbar-fixed-top'},
+        h('div', {class: 'nav-header'},
+          h('a', {class: 'navbar-brand', href: '#'}, props.title)
+        ),
+        h(ButtonBar, {onScreenChange: this.props.onScreenChange})
+      )
+    );
+  }
+}
+
+/**
+* @name DashboardScreen
+* @summary Dashboard Screen Component
+* @return {undefined}
+*/
+class DashboardScreen extends Component {
+  constructor(props) {
+    super(props);
+    this.setState({
+      timerID: 0,
+      searchTerm: '',
+      searchChecked: false
+    });
+  }
+
+  componentDidMount() {
+    this.getNodeData();
+    let timerID = setInterval(() => {
+      this.getNodeData();
+    }, 5000);
+    this.setState({
+      timerID
+    });
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.state.timerID);
+  }
+
+  searchChange(e) {
+    this.setState({
+      searchTerm: e.currentTarget.value
+    });
+  }
+
+  searchDeadServices(e) {
+    this.setState({
+      searchChecked: !this.state.searchChecked
+    });
+  }
+
+  getNodeData() {
+    let tokenUrlSuffix = '';
+    const token = new RegExp("token=([^&]*)", "i").exec(window.location.search);
+    if (token !== null)  {
+      tokenUrlSuffix = '?token=' + token[1];
+    }
+    fetch('/v1/router/list/nodes' + tokenUrlSuffix)
+      .then((res) => {
+        return res.json();
+      })
+      .then((res) => {
+        let sortedNodes = res.result.sort((a, b) => {
+          if (a.serviceName < b.serviceName)
+            return -1;
+          if (a.serviceName > b.serviceName)
+            return 1;
+          return 0;
+        });
+        this.setState({
+          instanceID: `hydra-router (${res.version}) running on ${res.hostname} - (${res.instanceID})`,
+          nodes: sortedNodes
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
+  render(props, state) {
+    const MAX_ELAPSED = 5; // in seconds
+    let tiles = null;
+
+    if (state.nodes) {
+      tiles = [];
+      state.nodes.forEach((node) => {
+        let content = [
+          h('p', {},
+            h('b', {}, 'HostName: '),
+            node.hostName
+          ),
+          h('p', {},
+            h('b', {}, 'Description: '),
+            node.serviceDescription
+          ),
+          h('p', {},
+            h('b', {}, 'InstanceID: '),
+            node.instanceID
+          ),
+          h('p', {},
+            h('b', {}, 'Version: '),
+            node.version
+          ),
+          h('p', {},
+            h('b', {}, 'IP/Port: '),
+            `${node.ip}:${node.port}`
+          ),
+          h('p', {},
+            h('b', {}, 'Updated on: '),
+            node.updatedOn
+          ),
+          h('p', {},
+            h('b', {}, 'Elapsed: '),
+            node.elapsed
+          )
+        ];
+        let icon;
+        let titleColor;
+        if (node.elapsed > MAX_ELAPSED) {
+          icon = 'glyphicon-circle-arrow-down';
+          titleColor= 'red';
+        } else {
+          icon = 'glyphicon-upload';
+          titleColor= 'black';
+        }
+        if (node.serviceName === 'hydra-router') {
+          icon = 'glyphicon-random';
+        }
+
+        let show = true;
+        if (state.searchTerm !== '') {
+          show = (node.serviceName.includes(state.searchTerm));
+        }
+        if (state.searchChecked && node.elapsed > 3) {
+          show = false;
+        }
+        if (show) {
+          tiles.push(
+            h(Panel, {icon, title: node.serviceName, titleColor, body: content})
+          );
+        }
+      });
+    }
+    return (
+      h('div', {class: 'container'},
+        h('div', {class: 'instance-info'}, `${state.instanceID}`),
+        h('div', {class: 'filter'},
+          h('input', {class: 'search-input', type: 'text', onkeyup: this.searchChange.bind(this)},),
+          h('input', {class: 'filter-checkbox', type: 'checkbox', onClick: this.searchDeadServices.bind(this)}, 'errors')
+        ),
+        h('div', {class: 'page-body'}, tiles)
+      )
+    );
+  }
+}
+
+/**
+* @name LogScreen
+* @summary Log screen component
+* @return {undefined}
+*/
+class LogScreen extends Component {
+  constructor(props) {
+    super(props);
+    this.setState({
+      timerID: 0
+    });
+  }
+
+  componentDidMount() {
+    this.getLogData();
+    let timerID = setInterval(() => {
+      this.getLogData();
+    }, 15000);
+    this.setState({
+      timerID
+    });
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.state.timerID);
+  }
+
+  getLogData() {
+    let tokenUrlSuffix = '';
+    const token = new RegExp("token=([^&]*)", "i").exec(window.location.search);
+    if (token !== null)  {
+      tokenUrlSuffix = '?token=' + token[1];
+    }
+    fetch('/v1/router/log' + tokenUrlSuffix)
+      .then((res) => {
+        return res.json();
+      })
+      .then((res) => {
+        this.setState({logs: res.result.logs});
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
+  render(props, state) {
+    let content = [];
+    if (state.logs) {
+      let i = 1;
+      state.logs.forEach((entry) => {
+        let data = (typeof entry.entry === 'object') ? JSON.stringify(entry.entry) : entry.entry;
+        let line = `${entry.ts} ${entry.type}: ${data}`;
+        i += 1;
+        let bkcolor = (i % 2) ? 'line' : 'linealt';
+        let fgcolor = (entry.type === 'error') ? 'red' : 'black';
+        content.push(
+          h('p', {class: `${bkcolor} ${fgcolor}`}, line)
+        );
+      });
+    }
+    return (
+      h('div', {class: 'container'},
+        h('div', {class: 'page-body'},
+          h(Panel, {type: 'full', icon: 'glyphicon-list-alt', title: 'Router log', titleColor: 'black', body: content})
+        )
+      )
+    );
+  }
+}
+
+/**
+* @name StatsScreen
+* @summary Stats screen component
+* @return {undefined}
+*/
+class StatsScreen extends Component {
+  constructor(props) {
+    super(props);
+    this.setState({
+      timerID: 0
+    });
+  }
+
+  componentDidMount() {
+    this.getStatsData();
+    let timerID = setInterval(() => {
+      this.getStatsData();
+    }, 1000);
+    this.setState({
+      timerID
+    });
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.state.timerID);
+  }
+
+  getStatsData() {
+    let tokenUrlSuffix = '';
+    const token = new RegExp("token=([^&]*)", "i").exec(window.location.search);
+    if (token !== null)  {
+      tokenUrlSuffix = '?token=' + token[1];
+    }
+    fetch('/v1/router/stats' + tokenUrlSuffix)
+      .then((res) => {
+        return res.json();
+      })
+      .then((res) => {
+        this.setState({stats: res.result});
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
+  getLastSecond(data) {
+    return data.slice(-ONE_SECOND);
+  }
+
+  getLastMinute(data) {
+    return data.slice(-ONE_MINUTE).reduce((sum, x) => sum + x);
+  }
+
+  getLast5Minutes(data) {
+    return data.slice(-(ONE_MINUTE * 5)).reduce((sum, x) => sum + x);
+  }
+
+  getLast15Minutes(data) {
+    return data.slice(-(ONE_QUARTER_HOUR)).reduce((sum, x) => sum + x);
+  }
+
+  getLast30Minutes(data) {
+    return data.slice(-(ONE_QUARTER_HOUR * 2)).reduce((sum, x) => sum + x);
+  }
+
+  getLastHour(data) {
+    return data.reduce((sum, x) => sum + x);
+  }
+
+  render(props, state) {
+    let content = [];
+    if (state.stats) {
+      let httpStats = [];
+      let wsStats = [];
+      let errorStats = [];
+
+      Object.keys(state.stats.httpStats).forEach((service) => {
+        let data = state.stats.httpStats[service];
+        httpStats.push(
+          h('tr', {},
+            h('td', {}, service),
+            h('td', {class: 'td-center'}, `${this.getLastSecond(data)}`),
+            h('td', {class: 'td-center'}, `${this.getLastMinute(data)}`),
+            h('td', {class: 'td-center'}, `${this.getLast5Minutes(data)}`),
+            h('td', {class: 'td-center'}, `${this.getLast15Minutes(data)}`),
+            h('td', {class: 'td-center'}, `${this.getLast30Minutes(data)}`),
+            h('td', {class: 'td-center'}, `${this.getLastHour(data)}`)
+          )
+        );
+      });
+
+      Object.keys(state.stats.wsStats).forEach((service) => {
+        let data = state.stats.wsStats[service];
+        wsStats.push(
+          h('tr', {},
+            h('td', {}, service),
+            h('td', {class: 'td-center'}, `${this.getLastSecond(data)}`),
+            h('td', {class: 'td-center'}, `${this.getLastMinute(data)}`),
+            h('td', {class: 'td-center'}, `${this.getLast5Minutes(data)}`),
+            h('td', {class: 'td-center'}, `${this.getLast15Minutes(data)}`),
+            h('td', {class: 'td-center'}, `${this.getLast30Minutes(data)}`),
+            h('td', {class: 'td-center'}, `${this.getLastHour(data)}`)
+          )
+        );
+      });
+
+      Object.keys(state.stats.errorStats).forEach((service) => {
+        let data = state.stats.errorStats[service];
+        errorStats.push(
+          h('tr', {},
+            h('td', {}, service),
+            h('td', {class: 'td-center'}, `${this.getLastSecond(data)}`),
+            h('td', {class: 'td-center'}, `${this.getLastMinute(data)}`),
+            h('td', {class: 'td-center'}, `${this.getLast5Minutes(data)}`),
+            h('td', {class: 'td-center'}, `${this.getLast15Minutes(data)}`),
+            h('td', {class: 'td-center'}, `${this.getLast30Minutes(data)}`),
+            h('td', {class: 'td-center'}, `${this.getLastHour(data)}`)
+          )
+        );
+      });
+
+      content.push(
+        h('h2', {}, 'HTTP requests'),
+        h('table', {class: 'table table-striped table-sep'},
+          h('thead', {},
+            h('tr', {},
+              h('th', {}, 'Service Name'),
+              h('th', {}, 'Last second'),
+              h('th', {}, 'Last minute'),
+              h('th', {}, 'Last 5 minutes'),
+              h('th', {}, 'Last 15 minutes'),
+              h('th', {}, 'Last 30 minutes'),
+              h('th', {}, 'Last 60 minutes')
+            )
+          ),
+          h('tbody', {}, httpStats)
+        ),
+        h('h2', {}, 'WebSocket requests'),
+        h('table', {class: 'table table-striped table-sep'},
+          h('thead', {},
+            h('tr', {},
+              h('th', {}, 'Service Name'),
+              h('th', {}, 'Last second'),
+              h('th', {}, 'Last minute'),
+              h('th', {}, 'Last 5 minutes'),
+              h('th', {}, 'Last 15 minutes'),
+              h('th', {}, 'Last 30 minutes'),
+              h('th', {}, 'Last 60 minutes')
+            )
+          ),
+          h('tbody', {}, wsStats)
+        ),
+        h('h2', {}, 'Errors'),
+        h('table', {class: 'table table-striped table-sep'},
+          h('thead', {},
+            h('tr', {},
+              h('th', {}, 'Service Name'),
+              h('th', {}, 'Last second'),
+              h('th', {}, 'Last minute'),
+              h('th', {}, 'Last 5 minutes'),
+              h('th', {}, 'Last 15 minutes'),
+              h('th', {}, 'Last 30 minutes'),
+              h('th', {}, 'Last 60 minutes')
+            )
+          ),
+          h('tbody', {}, errorStats)
+        )
+      );
+    }
+    return (
+      h('div', {class: 'container'},
+        h('div', {class: 'page-body'},
+          h(Panel, {type: 'full', icon: 'glyphicon-stats', title: 'Service Stats', titleColor: 'black', body: content})
+        )
+      )
+    );
+  }
+}
+
+/**
+* @name Main
+* @summary Main app component
+* @return {undefined}
+*/
+class Main extends Component {
+  constructor(props) {
+    super(props);
+  }
+
+  render(props, state) {
+    let screen = false;
+    if (this.props.screen === 'dashboard') {
+      screen = h(DashboardScreen, {});
+    } else if (this.props.screen === 'log') {
+      screen = h(LogScreen, {});
+    } else if (this.props.screen === 'stats') {
+      screen = h(StatsScreen, {});
+    }
+    return (
+      screen
+    );
+  }
+}
+
+render(h(App), document.body);
+    </script>
+	</body>
+</html>

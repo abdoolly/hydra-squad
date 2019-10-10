@@ -1,0 +1,26 @@
+version: "3.7"
+
+services:
+
+  hydra-router:
+    build: .
+    image: squad-leader:1.0
+    container_name: hydra-router
+    ports:
+      - 5353:5353
+    depends_on:
+      - redis
+    networks: 
+      - hydra-network
+
+  redis:
+    image: redis
+    container_name: hydra-redis
+    ports:
+      - 6379:6379
+    networks: 
+      - hydra-network
+
+networks:
+  hydra-network:
+      name: hydra-network

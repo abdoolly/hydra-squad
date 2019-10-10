@@ -1,0 +1,13 @@
+{
+  "name": "hydra-squad",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "chmod +x ./bootstrapper/start.sh && ./bootstrapper/start.sh",
+    "stop": "chmod +x ./bootstrapper/stop.sh && ./bootstrapper/stop.sh",
+    "restart": "chmod +x ./bootstrapper/restart.sh && ./bootstrapper/restart.sh"
+  },
+  "author": "",
+  "license": "ISC"
+}

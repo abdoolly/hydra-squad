@@ -1,0 +1,35 @@
+{
+  "environment": "development",
+  "hydra": {
+    "serviceName": "member-1",
+    "serviceIP": "",
+    "servicePort": 3000,
+    "serviceType": "testHydra",
+    "serviceDescription": "test everything about hydra and says hello",
+    "plugins": {
+      "logger": {
+        "logRequests": true,
+        "elasticsearch": {
+          "host": "localhost",
+          "port": 9200,
+          "index": "local-dev"
+        }
+      }
+    },
+    "redis": {
+      "url": "hydra-redis",
+      "port": 6379,
+      "db": 15
+    },
+    "redis2": {
+      "db": 15,
+      "sentinels": [
+        {
+          "host": "redis-sentinel.default.svc.cluster.local",
+          "port": 26379
+        }
+      ],
+      "name": "mymaster"
+    }
+  }
+}

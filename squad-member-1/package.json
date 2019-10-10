@@ -1,0 +1,55 @@
+{
+  "name": "testhydra-service",
+  "version": "0.0.1",
+  "author": "Abdallah Gamal <abdallah.gamal@audaciousfutures.co>",
+  "private": true,
+  "scripts": {
+    "start": "NODE_ENV=development node -r ts-node/register ./src/app.ts",
+    "start:fast": "ts-node-dev --respawn ./src/app.ts",
+    "custom": "chmod +x start.sh && ./start.sh",
+    "watch": "nodemon",
+    "start:prod": "npm run build && NODE_ENV=production node dist/app.js",
+    "build": "tsc",
+    "debug": "node-debug testHydra-service.js --debug-brk",
+    "test": "jest"
+  },
+  "engines": {
+    "node": ">=6.2.1"
+  },
+  "dependencies": {
+    "fwsp-config": "1.1.5",
+    "fwsp-jsutils": "^1.0.10",
+    "fwsp-logger": "0.3.4",
+    "hydra-promoted": "^2.0.2",
+    "inversify-manager": "^1.0.3",
+    "jsonwebtoken": "^8.5.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.1",
+    "@types/jest": "^24.0.18",
+    "@types/jsonwebtoken": "^8.3.4",
+    "@types/node": "^12.7.2",
+    "inversify": "^5.0.1",
+    "jest": "^24.9.0",
+    "nodemon": "^1.19.1",
+    "reflect-metadata": "^0.1.13",
+    "superagent": "3.5.2",
+    "ts-jest": "^24.0.2",
+    "ts-node": "^8.3.0",
+    "ts-node-dev": "^1.0.0-pre.43",
+    "typescript": "^3.6.2"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "**/*.test.ts",
+      "**/*.spec.ts",
+      ".git",
+      "node_modules"
+    ],
+    "watch": [
+      "src"
+    ],
+    "exec": "npm start",
+    "ext": "ts"
+  }
+}
